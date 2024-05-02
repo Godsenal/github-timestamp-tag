@@ -1,0 +1,63 @@
+name: 'github-timestamp-tag'
+description: 'Generate timestamp based tag'
+inputs:
+  prefix:
+    description: ''
+outputs:
+  previousTag:
+    description: "previous tag with prefix"
+    value: ${{ steps.previousTag.outputs.tag }}
+  currentTag:
+    description: "current tag with prefix"
+    value: ${{ steps.version.outputs.result }}
+  releaseNote:
+    description: "release note"
+    value: ${{ steps.release-note.outputs.result }}
+runs:
+  using: "composite"
+  steps:
+    - name: create version
+      uses: actions/github-script@v6
+      id: version
+      with:
+        result-encoding: string
+        script: |
+          const timeZoneOffset = 9 * 60 * 60 * 1000;
+          const yyyymmddhhmm = new Date(Date.now() + timeZoneOffset).toISOString().replace(/[^0-9]/g, '').slice(0, -5);
+          const prefix = '${{ inputs.prefix }}';
+
+          return `${prefix}${yyyymmddhhmm}`;
+    - name: get previous tag
+      id: previousTag
+      uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      with:
+        prefix: ${{ inputs.prefix }}
+        fallback: ""
+    - name: create tag
+      id: currentTag
+      run: |
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git tag -a -f ${{ steps.version.outputs.result }} -m "Release ${{ steps.version.outputs.result }}"
+      shell: bash
+    - name: generate release note
+      id: release-note
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          const previousTag = '${{ steps.previoustag.outputs.tag }}';
+          const currentTag = '${{ steps.version.outputs.result }}';
+
+          if (!previousTag) {
+            return '';
+          }
+
+          const result = await github.rest.repos.generateReleaseNotes({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag_name: currentTag,
+            previous_tag_name: previousTag
+          });
+
+          return result.data.body;
