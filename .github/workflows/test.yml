@@ -6,6 +6,8 @@ jobs:
     name: Test tag action
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - id: timestamp-tag
         uses: godsenal/github-timestamp-tag@v0.0.1
         with:
