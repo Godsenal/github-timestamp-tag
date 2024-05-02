@@ -1,9 +1,9 @@
-on: [push]
+on: [push, workflow_dispatch]
 
 jobs:
-  hello_world_job:
+  test-tag-action:
     runs-on: ubuntu-latest
-    name: A job to say hello
+    name: Test tag action
     steps:
       - uses: actions/checkout@v4
       - id: foo
@@ -17,3 +17,6 @@ jobs:
             console.log(`The previous tag is: ${{ steps.foo.outputs.previousTag }}`);
             console.log(`The current tag is: ${{ steps.foo.outputs.currentTag }}`);
             console.log(`The release note is: ${{ steps.foo.outputs.releaseNote }}`);
+      - name: push tag
+        run: |
+          git push -f origin ${{ steps.foo.outputs.currentTag }}
