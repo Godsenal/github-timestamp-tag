@@ -6,7 +6,7 @@ jobs:
     name: Test tag action
     steps:
       - uses: actions/checkout@v4
-      - id: foo
+      - id: timestamp-tag
         uses: godsenal/github-timestamp-tag@v0.0.1
         with:
           prefix: "test-"
@@ -14,9 +14,17 @@ jobs:
         with:
           result-encoding: string
           script: |
-            console.log(`The previous tag is: ${{ steps.foo.outputs.previousTag }}`);
-            console.log(`The current tag is: ${{ steps.foo.outputs.currentTag }}`);
-            console.log(`The release note is: ${{ steps.foo.outputs.releaseNote }}`);
+            console.log(`The previous tag is: ${{ steps.timestamp-tag.outputs.previousTag }}`);
+            console.log(`The current tag is: ${{ steps.timestamp-tag.outputs.currentTag }}`);
+            console.log(`The release note is: ${{ steps.timestamp-tag.outputs.releaseNote }}`);
       - name: push tag
         run: |
-          git push -f origin ${{ steps.foo.outputs.currentTag }}
+          git push -f origin ${{ steps.timestamp-tag.outputs.currentTag }}
+      - name: create release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: ${{ steps.timestamp-tag.outputs.currentTag }}
+          name: "${{ steps.timestamp-tag.outputs.currentTag }} 배포"
+          body: ${{ steps.timestamp-tag.outputs.releaseNote }}
+          omitBodyDuringUpdate: true
