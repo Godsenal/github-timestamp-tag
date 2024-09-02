@@ -2,7 +2,9 @@ name: 'github-timestamp-tag'
 description: 'Generate timestamp based tag'
 inputs:
   prefix:
-    description: ''
+    description: 'tag prefix'
+  configuration_file_path:
+    description: 'path to configuration file (https://docs.github.com/ko/rest/releases/releases?apiVersion=2022-11-28#generate-release-notes-content-for-a-release)'
 outputs:
   previousTag:
     description: "previous tag with prefix"
@@ -48,6 +50,7 @@ runs:
         script: |
           const previousTag = '${{ steps.previoustag.outputs.tag }}';
           const currentTag = '${{ steps.version.outputs.result }}';
+          const configurationFilePath = '${{ inputs.configuration_file_path }}';
 
           if (!previousTag) {
             return '';
@@ -57,7 +60,8 @@ runs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             tag_name: currentTag,
-            previous_tag_name: previousTag
+            previous_tag_name: previousTag,
+            configuration_file_path: configurationFilePath
           });
 
           return result.data.body;
