@@ -12,6 +12,9 @@ outputs:
   currentTag:
     description: "current tag with prefix"
     value: ${{ steps.version.outputs.result }}
+  timestamp:
+    description: "timestamp value (YYYYMMDDHHmm in KST)"
+    value: ${{ steps.version.outputs.timestamp }}
   releaseNote:
     description: "release note"
     value: ${{ steps.release-note.outputs.result }}
@@ -28,6 +31,7 @@ runs:
           const yyyymmddhhmm = new Date(Date.now() + timeZoneOffset).toISOString().replace(/[^0-9]/g, '').slice(0, -5);
           const prefix = '${{ inputs.prefix }}';
 
+          core.setOutput('timestamp', yyyymmddhhmm);
           return `${prefix}${yyyymmddhhmm}`;
     - name: get previous tag
       id: previousTag
