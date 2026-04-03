@@ -3,6 +3,8 @@ description: 'Generate timestamp based tag'
 inputs:
   prefix:
     description: 'tag prefix'
+  version:
+    description: 'custom version string (if omitted, auto-generates YYYYMMDDHHmm timestamp in KST)'
   configuration_file_path:
     description: 'path to configuration file (https://docs.github.com/ko/rest/releases/releases?apiVersion=2022-11-28#generate-release-notes-content-for-a-release)'
 outputs:
@@ -27,12 +29,16 @@ runs:
       with:
         result-encoding: string
         script: |
-          const timeZoneOffset = 9 * 60 * 60 * 1000;
-          const yyyymmddhhmm = new Date(Date.now() + timeZoneOffset).toISOString().replace(/[^0-9]/g, '').slice(0, -5);
+          const customVersion = '${{ inputs.version }}';
           const prefix = '${{ inputs.prefix }}';
 
-          core.setOutput('timestamp', yyyymmddhhmm);
-          return `${prefix}${yyyymmddhhmm}`;
+          const version = customVersion || (() => {
+            const timeZoneOffset = 9 * 60 * 60 * 1000;
+            return new Date(Date.now() + timeZoneOffset).toISOString().replace(/[^0-9]/g, '').slice(0, -5);
+          })();
+
+          core.setOutput('timestamp', version);
+          return `${prefix}${version}`;
     - name: get previous tag
       id: previousTag
       uses: "WyriHaximus/github-action-get-previous-tag@v1"
